@@ -3,7 +3,8 @@ q learning
 expected exponentially discounted reward
 <br>
 r learning
-== expected average reward
+== 
+expected average reward
 <br>
 "d" learning
 ==
