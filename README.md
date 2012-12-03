@@ -8,5 +8,5 @@ expected average reward
 <br>
 "d" learning
 ==
-expected arbitrarily-multiplicatively discounted reward
+expected arbitrarily-multiplicatively (eg hyperbolically) discounted reward
 <br>
