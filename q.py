@@ -19,10 +19,7 @@ def argmax(xs, f):
 def Qlearning(mdp, n=inf, alpha=0.1, eps=0.01, explore=0.1):
     # init
     print 'init..'
-    Q = dict( (s, dict.fromkeys(mdp.A(s), 0)) for s in mdp.S )
-    print Q
-    print Q[0]
-    print Q[0]['short']
+    Q = { s : dict.fromkeys(mdp.A(s), 0)  for s in mdp.S }
     gamma = mdp.gamma
     i, diff = 0, inf
     exploit = 1-explore
@@ -44,7 +41,6 @@ def Qlearning(mdp, n=inf, alpha=0.1, eps=0.01, explore=0.1):
             P = pick( [P, exploration], [exploit, explore] )
             
         s,a,r,s_ = mdp.run(P)
-        print 'sars', s,a,r, s_
         
         #Qsa = Q[s][a]
         Q[s][a]  =  Q[s][a] * (1-alpha)  +  alpha * (r + gamma * V(s_) )
@@ -60,10 +56,13 @@ n, alpha, eps, explore = 40*1000, 0.1, 0.01, 0.1
 
 Q,i = Qlearning(mdp, alpha=alpha, n=n, eps=eps, explore=explore)
 
+print
 Qlong, Qshort = Q[0]['long'], Q[0]['short']
-print 'Qlong', Qlong
-print 'Qshort', Qshort
+print 'Qlong =', Qlong
+print 'Qshort =', Qshort
 print Qlong > Qshort
 
+print
+print 'Q ='
 print Q
 
