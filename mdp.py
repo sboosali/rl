@@ -7,14 +7,15 @@ from numpy.random import multinomial
 # # # # # # # # # # # # # # # # # # # # # # # # 
 # MDP
 
+def argmax(xs, f):
+    return xs[ np.argmax(f(xs)) ]
 
 def pick(xs, ps):
-    return xs[ argmax(multinomial(1, ps)) ]
+    return xs[ np.argmax(multinomial(1, ps)) ]
 
 
 class MDP:
-    def __init__(self, gamma=0.9, s0=None):
-        self.gamma = gamma
+    def __init__(self, s0=None):
         self.s     = s0 if s0 else self.S[0]
         
     S = []
