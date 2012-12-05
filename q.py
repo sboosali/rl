@@ -3,6 +3,7 @@ from __future__ import division
 from numpy import *
 import numpy as np
 from mdp import *
+from time import clock
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Learn
@@ -63,9 +64,13 @@ def main(gamma):
     alpha   = 0.9
     eps     = 0.01
     explore = 0.1
+
+    begin = clock()
     Q,iters,mean = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, eps=eps, explore=explore, debug=False)
+    finish = clock()
 
     print
+    print 'time = %.3fs' % (finish - begin)
     print 'gamma =', gamma
     print 'mean  =', mean
     print 'iters =', iters

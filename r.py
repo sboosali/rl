@@ -3,6 +3,7 @@ from __future__ import division
 from numpy import *
 import numpy as np
 from mdp import *
+from time import clock
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Learn
@@ -67,9 +68,13 @@ def main():
     beta    = 0.1
     eps     = 0.01
     explore = 0.1
-    R,iters,mean = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, explore=explore, debug=False)
 
+    begin = clock()
+    R,iters,mean = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, explore=explore, debug=False)
+    finish = clock()
+    
     print
+    print 'time = %.3fs' % (finish - begin)
     print 'mean =', mean
     print 'iters =', iters
     Rlong, Rshort = R[s0]['long'], R[s0]['short']
