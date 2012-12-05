@@ -2,8 +2,10 @@
 from __future__ import division
 from numpy import *
 import numpy as np
+from matplotlib.pyplot import *
+from time import clock, sleep
+
 from mdp import *
-from time import clock
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Learn
@@ -25,7 +27,7 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
 
     exploit = 1-explore
 
-    i, diff, m = 0, inf, 0
+    i, diff, ms = 0, inf, zeros(n+1)
     
     # loop
     while i < n: #and diff > eps:
@@ -45,10 +47,10 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
         Q[s][a]  =  Q[s][a] * (1-alpha)  +  alpha * (r + gamma * V(s_) )
         #diff = Qsa - Q[s][a]
 
-        m = (m*i + r) / (i+1)
-        if debug and i%100 == 0 and m<1.8: print i,m
+        ms[i] = (ms[i-1]*i + r) / (i+1)
+        if debug and i%100 == 0 and ms[i]<1.8: print i,ms[i]
         
-    return Q,i,m
+    return Q,i,ms
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Main
@@ -66,13 +68,17 @@ def main(gamma):
     explore = 0.1
 
     begin = clock()
-    Q,iters,mean = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, eps=eps, explore=explore, debug=False)
+    Q,iters,means = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, eps=eps, explore=explore, debug=False)
     finish = clock()
+
+    ion()
+    plot(means)
+    draw()
 
     print
     print 'time = %.3fs' % (finish - begin)
     print 'gamma =', gamma
-    print 'mean  =', mean
+    print 'mean  =', means[-1]
     print 'iters =', iters
     Qlong, Qshort = Q[s0]['long'], Q[s0]['short']
     print 'Qlong  =', Qlong
@@ -86,3 +92,5 @@ def main(gamma):
 
 for gamma in [0.7, 0.9, 0.99]:
     main(gamma)
+
+sleep(60)

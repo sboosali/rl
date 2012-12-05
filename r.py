@@ -2,8 +2,10 @@
 from __future__ import division
 from numpy import *
 import numpy as np
+from matplotlib.pyplot import *
+from time import clock, sleep
+
 from mdp import *
-from time import clock
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Learn
@@ -23,11 +25,12 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
     # init
     R = { s : dict.fromkeys(mdp.A(s), 0)  for s in mdp.S }
     def V(s_): return max( R[s_][a_] for a_ in mdp.A(s_) )
-    rho = { s : 0  for s in mdp.S }
+    rho = 0 # assume unichain policy -> rho[s] == rho[s_] forall states s,s_ -> const rho
+    #rho = { s : 0  for s in mdp.S }
 
     exploit = 1-explore
 
-    i, diff, m = 0, inf, 0
+    i, diff, ms = 0, inf, zeros(n+1)
 
     # loop
     while i < n: #and diff > eps:
@@ -41,17 +44,19 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
             else: # off policy
                 P = short  if R['h1']['short'] < R['h1']['long']  else long
 
+
         s,a,r,s_ = mdp.run(P)
+        
+        R[s][a]  =  R[s][a] * (1-beta)   +  beta  * (r + V(s_) - rho)
 
         if on:
-            rho[s] = rho[s] * (1-alpha)  +  alpha * (r + V(s_) - V(s))
-            
-        R[s][a]  =  R[s][a] * (1-beta)   +  beta *  (r + V(s_) - rho[s])
+            rho = rho * (1-alpha)  +  alpha * (r + V(s_) - V(s))
 
-        m = (m*i + r) / (i+1)
-        if debug and i%100 == 0 and m<1.8: print i,m
         
-    return R,i,m
+        ms[i] = (ms[i-1]*i + r) / (i+1)
+        if debug and i%100 == 0 and ms[i]<1.8: print i,ms[i]
+        
+    return R,i,ms
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Main
@@ -63,19 +68,23 @@ def main():
     global s0
     s0 = mdp.S[0]
 
-    n       = 40
+    n       = 40*1000
     alpha   = 0.1
     beta    = 0.1
     eps     = 0.01
     explore = 0.1
 
     begin = clock()
-    R,iters,mean = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, explore=explore, debug=False)
+    R,iters,means = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, explore=explore, debug=False)
     finish = clock()
-    
+
+    ion()
+    plot(means)
+    draw()
+
     print
     print 'time = %.3fs' % (finish - begin)
-    print 'mean =', mean
+    print 'mean =', means[-1]
     print 'iters =', iters
     Rlong, Rshort = R[s0]['long'], R[s0]['short']
     print 'Rlong =', Rlong
@@ -85,5 +94,7 @@ def main():
     print
     print 'R ='
     print R
-    
+
 main()
+
+sleep(60)
