@@ -45,23 +45,35 @@ class MDP:
 
 
 class FeynmanFetch(MDP):
-    S = range(16)
+    home   = ['h1']
+    shorts = ['s2', 's3', 's4', 's5']
+    longs  = ['l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10']
+    S = home + shorts + longs
 
     def A(self, s):
-        return ['short', 'long'] if s==0 else ['next']
+        return ['short', 'long'] if s=='h1' else ['next']
 
     def R(self, s,a):
-        if   (s,a) == (15,'next'): return 5
-        elif (s,a) == (10,'next'): return 20
+        if   (s,a) == (self.shorts[-1],'next'): return 5
+        elif (s,a) == (self.longs [-1],'next'): return 20
         else: return 0
 
+    def inc(self, s):
+        x, i = s[0], int(s[1:])
+        return x+str(i+1)
+    
     def T(self, s,a):
-        if s==0:
-            return {'short' : ([11],[1]) , 'long' : ([1],[1]) }[a] 
-        elif s==10:
-            return ([0],[1])
-        elif s==15:
-            return ([0],[1])
+
+        if s=='h1':
+            return {'short' : ([self.shorts[0]],[1]) ,
+                    'long'  : ([self.longs [0]],[1]) }[a] 
+
+        elif s==self.shorts[-1]:
+            return (['h1'],[1])
+
+        elif s==self.longs[-1]:
+            return (['h1'],[1])
+
         else:
-            return ([s+1],[1])
+            return ([self.inc(s)],[1])
 
