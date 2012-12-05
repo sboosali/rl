@@ -27,18 +27,17 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
     def V(s_): return max( R[s_][a_] for a_ in mdp.A(s_) )
     rho = 0 # assume unichain policy -> rho[s] == rho[s_] forall states s,s_ -> const rho
     #rho = { s : 0  for s in mdp.S }
-
+    
     exploit = 1-explore
-
-    i, diff, ms = 0, inf, zeros(n+1)
-
+    
+    i, diff, rs = 0, inf, zeros(n)
+    
     # loop
     while i < n: #and diff > eps:
-        i+=1
+
+        on = pick( [True, False], [exploit, explore] )
 
         if mdp.s == 'h1':
-            on = pick( [True, False], [exploit, explore] )
-
             if on: # on policy
                 P = short  if R['h1']['short'] > R['h1']['long']  else long
             else: # off policy
@@ -52,11 +51,12 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
         if on:
             rho = rho * (1-alpha)  +  alpha * (r + V(s_) - V(s))
 
+            
+        rs[i] = r
+        #if debug and i%100 == 0 and ms[i]<1.8: print i,ms[i]
+        i+=1
         
-        ms[i] = (ms[i-1]*i + r) / (i+1)
-        if debug and i%100 == 0 and ms[i]<1.8: print i,ms[i]
-        
-    return R,i,ms
+    return R,i,rs
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Main
@@ -68,23 +68,27 @@ def main():
     global s0
     s0 = mdp.S[0]
 
-    n       = 40*1000
-    alpha   = 0.1
+    import argparse
+    cl = argparse.ArgumentParser()
+    cl.add_argument('-alpha', type=float, default=None)
+    cl.add_argument('-n', type=int, default=None)
+    args = cl.parse_args()
+
+    n       = args.n if args.n else 50*1000
+    alpha   = args.alpha if args.alpha else 0.9
     beta    = 0.1
     eps     = 0.01
     explore = 0.1
 
     begin = clock()
-    R,iters,means = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, explore=explore, debug=False)
+    R,iters,rewards = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, explore=explore, debug=False)
     finish = clock()
 
-    ion()
-    plot(means)
-    draw()
-
+    means1000(rewards)
+    
     print
     print 'time = %.3fs' % (finish - begin)
-    print 'mean =', means[-1]
+    print 'mean =', mean(rewards)
     print 'iters =', iters
     Rlong, Rshort = R[s0]['long'], R[s0]['short']
     print 'Rlong =', Rlong
@@ -95,6 +99,7 @@ def main():
     print 'R ='
     print R
 
-main()
+if __name__=='__main__':
+    main()
 
-sleep(60)
+    sleep(60)

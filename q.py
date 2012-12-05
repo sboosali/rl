@@ -27,11 +27,10 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
 
     exploit = 1-explore
 
-    i, diff, ms = 0, inf, zeros(n+1)
+    i, diff, rs = 0, inf, zeros(n)
     
     # loop
     while i < n: #and diff > eps:
-        i+=1
 
         if mdp.s == 'h1':
             # on policy
@@ -40,6 +39,7 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
 
             # off policy
             P = pick( [P, exploration], [exploit, explore] )
+            #print P.__name__
             
         s,a,r,s_ = mdp.run(P)
         
@@ -47,10 +47,11 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
         Q[s][a]  =  Q[s][a] * (1-alpha)  +  alpha * (r + gamma * V(s_) )
         #diff = Qsa - Q[s][a]
 
-        ms[i] = (ms[i-1]*i + r) / (i+1)
-        if debug and i%100 == 0 and ms[i]<1.8: print i,ms[i]
+        rs[i] = r
+
+        i+=1
         
-    return Q,i,ms
+    return Q,i,rs
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Main
@@ -58,27 +59,31 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
 #TODO tune params: explore?, alpha, beta
 def main(gamma):
     mdp = FeynmanFetch()
-
+    
     global s0
     s0 = mdp.S[0]
 
-    n       = 40*1000
-    alpha   = 0.9
+    import argparse
+    cl = argparse.ArgumentParser()
+    cl.add_argument('-alpha', type=float, default=None)
+    cl.add_argument('-n', type=int, default=None)
+    args = cl.parse_args()
+
+    n       = args.n if args.n else 50*1000
+    alpha   = args.alpha if args.alpha else 0.9
     eps     = 0.01
-    explore = 0.1
+    explore = 0.01
 
     begin = clock()
-    Q,iters,means = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, eps=eps, explore=explore, debug=False)
+    Q,iters,rewards = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, eps=eps, explore=explore, debug=False)
     finish = clock()
 
-    ion()
-    plot(means)
-    draw()
-
+    means1000(rewards)
+    
     print
     print 'time = %.3fs' % (finish - begin)
     print 'gamma =', gamma
-    print 'mean  =', means[-1]
+    print 'mean  =', mean(rewards)
     print 'iters =', iters
     Qlong, Qshort = Q[s0]['long'], Q[s0]['short']
     print 'Qlong  =', Qlong
@@ -90,7 +95,9 @@ def main(gamma):
     print Q
     
 
-for gamma in [0.7, 0.9, 0.99]:
-    main(gamma)
+if __name__=='__main__':
+    for gamma in [0.7, 0.9, 0.99]:
+        main(gamma)
+        
+    sleep(60)
 
-sleep(60)
