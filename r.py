@@ -23,7 +23,7 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
     print 'R LEARNING...'
 
     # init
-    R = { s : dict.fromkeys(mdp.A(s), 0)  for s in mdp.S }
+    R = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
     def V(s_): return max( R[s_][a_] for a_ in mdp.A(s_) )
     rho = 0 # assume unichain policy -> rho[s] == rho[s_] forall states s,s_ -> const rho
     #rho = { s : 0  for s in mdp.S }
@@ -35,25 +35,26 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
     # loop
     while i < n: #and diff > eps:
 
+        # epsilon greedy exploration "on policy"
         on = pick( [True, False], [exploit, explore] )
 
         if mdp.s == 'h1':
-            if on: # on policy
+            if on:
                 P = short  if R['h1']['short'] > R['h1']['long']  else long
-            else: # off policy
+            else:
                 P = short  if R['h1']['short'] < R['h1']['long']  else long
 
 
         s,a,r,s_ = mdp.run(P)
         
-        R[s][a]  =  R[s][a] * (1-beta)   +  beta  * (r + V(s_) - rho)
+        R[s][a] = R[s][a] * (1-beta)  +  beta  * (r + V(s_) - rho)
 
         if on:
-            rho = rho * (1-alpha)  +  alpha * (r + V(s_) - V(s))
+            # on policy, V s = R s P(s) = R s a
+            rho = rho *    (1-alpha)  +  alpha * (r + V(s_) - V(s))
 
             
         rs[i] = r
-        #if debug and i%100 == 0 and ms[i]<1.8: print i,ms[i]
         i+=1
         
     return R,i,rs

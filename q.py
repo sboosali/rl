@@ -16,15 +16,16 @@ def short(s):
 def long(s):
     return 'long' if s==s0 else 'next'
 
-def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=True):
+def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.001, eps=0.01, explore=0.001, debug=True):
     print
     print
     print 'Q LEARNING...'
 
     # init
-    Q = { s : dict.fromkeys(mdp.A(s), 0)  for s in mdp.S }
-    def V(s_): return max( Q[s_][a_] for a_ in mdp.A(s_) )
+    Q = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
 
+    def V(s_): return max( Q[s_][a_] for a_ in mdp.A(s_) )
+    
     exploit = 1-explore
 
     i, diff, rs = 0, inf, zeros(n)
@@ -32,13 +33,13 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
     # loop
     while i < n: #and diff > eps:
 
-        if mdp.s == 'h1':
+        if mdp.s == s0:
             # on policy
-            P = short  if Q['h1']['short'] > Q['h1']['long']  else long
-            exploration = short if P==long else long
-
+            P = long  if Q[s0]['short'] < Q[s0]['long']  else short
+            notP = short if P==long else long
+            
             # off policy
-            P = pick( [P, exploration], [exploit, explore] )
+            P = pick( [P, notP], [exploit, explore] ) # epsilon greedy exploration
             #print P.__name__
             
         s,a,r,s_ = mdp.run(P)
@@ -48,7 +49,6 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.1, eps=0.01, explore=0.1, debug=Tru
         #diff = Qsa - Q[s][a]
 
         rs[i] = r
-
         i+=1
         
     return Q,i,rs
@@ -67,8 +67,11 @@ def main(gamma):
     cl = argparse.ArgumentParser()
     cl.add_argument('-alpha', type=float, default=None)
     cl.add_argument('-n', type=int, default=None)
-    args = cl.parse_args()
+    cl.add_argument('-save', action='store_true', dest='save', default=False)
 
+    global args
+    args = cl.parse_args()
+    
     n       = args.n if args.n else 50*1000
     alpha   = args.alpha if args.alpha else 0.9
     eps     = 0.01
@@ -77,8 +80,8 @@ def main(gamma):
     begin = clock()
     Q,iters,rewards = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, eps=eps, explore=explore, debug=False)
     finish = clock()
-
-    means1000(rewards)
+    
+    means1000(rewards, args.save)
     
     print
     print 'time = %.3fs' % (finish - begin)
@@ -98,6 +101,9 @@ def main(gamma):
 if __name__=='__main__':
     for gamma in [0.7, 0.9, 0.99]:
         main(gamma)
-        
-    sleep(60)
+    
+    if args.save:
+        show()
+    else:
+        sleep(60)
 

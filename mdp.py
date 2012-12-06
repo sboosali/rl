@@ -3,6 +3,7 @@ from __future__ import division
 from numpy import *
 import numpy as np
 from numpy.random import multinomial
+from matplotlib.pyplot import *
 
 # # # # # # # # # # # # # # # # # # # # # # # # 
 # MDP
@@ -13,6 +14,20 @@ def argmax(xs, f):
 def pick(xs, ps):
     return xs[ np.argmax(multinomial(1, ps)) ]
 
+def means1000(rewards, save=False):
+    means1000 = zeros(rewards.size - 1000)
+    for i in xrange(means1000.size):
+        means1000[i] = mean(rewards[i-1000 : i])
+
+    if save:
+        ioff()
+    else:
+        ion()
+
+    axis([0, rewards.size]+[0, 2.5])
+    plot(means1000)
+    draw()
+    
 
 class MDP:
     def __init__(self, s0=None):
