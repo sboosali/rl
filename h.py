@@ -57,8 +57,7 @@ def Hlearning(mdp, n=inf, delta=0.8, beta=0.9, alpha=0.01, diff=0.0001, explore=
 # Main
 
 #TODO tune params: explore?, alpha, beta
-def main(beta, delta):
-    mdp = FeynmanFetch()
+def main(beta, delta, mdp):
     
     global s0
     s0 = mdp.S[0]
@@ -102,7 +101,9 @@ def main(beta, delta):
 
 if __name__=='__main__':
     for beta,delta in [(0.80, 0.90), (0.90, 0.95)]:
-        main(beta, delta)
+        #mdp = FeynmanFetch()
+        mdp = AllaisParadox()
+        main(beta, delta, mdp)
 
     show() if args.save else sleep(60)
-    
+
