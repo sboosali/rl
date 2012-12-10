@@ -19,10 +19,7 @@ def means1000(rewards, save=False):
     for i in xrange(means1000.size):
         means1000[i] = mean(rewards[i-1000 : i])
 
-    if save:
-        ioff()
-    else:
-        ion()
+    ioff() if save else ion()
 
     axis([0, rewards.size]+[0, 2.5])
     plot(means1000)
@@ -92,4 +89,15 @@ class FeynmanFetch(MDP):
 
         else:
             return ([self.inc(s)],[1])
+
+
+
+
+class TimeInconsistent(mdp):
+    pass
+
+
+
+class AllaisParadox(mdp):
+    pass
 
