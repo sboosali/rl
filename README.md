@@ -10,3 +10,7 @@ expected average reward
 ==
 expected arbitrarily-multiplicatively (eg hyperbolically) discounted reward
 <br>
+"h" learning
+==
+expected quasi hyperbolically multiplicatively discounted reward
+<br>
