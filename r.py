@@ -17,15 +17,16 @@ def long(s):
     return 'long' if s==s0 else 'next'
 
 
-def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True):
+def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, explore=0.01, debug=True):
     print
     print
     print 'R LEARNING...'
-
+    
     # init
     R = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
     def V(s_): return max( R[s_][a_] for a_ in mdp.A(s_) )
-    rho = 0 # assume unichain policy -> rho[s] == rho[s_] forall states s,s_ -> const rho
+    # unichain policy -> rho[s] == rho[s_] forall states s,s_ -> const rho
+    rho = 0
     #rho = { s : 0  for s in mdp.S }
     
     exploit = 1-explore
@@ -33,7 +34,7 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
     i, diff, rs = 0, inf, zeros(n)
     
     # loop
-    while i < n: #and diff > eps:
+    while i < n: #and diff > delta:
 
         # epsilon greedy exploration "on policy"
         on = pick( [True, False], [exploit, explore] )
@@ -52,11 +53,10 @@ def Rlearning(mdp, n=inf, beta=0.1, alpha=0.1, eps=0.01, explore=0.1, debug=True
         if on:
             # on policy, V s = R s P(s) = R s a
             rho = rho *    (1-alpha)  +  alpha * (r + V(s_) - V(s))
-
-            
+                        
         rs[i] = r
         i+=1
-        
+
     return R,i,rs
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -73,19 +73,24 @@ def main():
     cl = argparse.ArgumentParser()
     cl.add_argument('-alpha', type=float, default=None)
     cl.add_argument('-n', type=int, default=None)
+    cl.add_argument('-save', action='store_true', dest='save', default=False)
+
+    global args
     args = cl.parse_args()
 
     n       = args.n if args.n else 50*1000
-    alpha   = args.alpha if args.alpha else 0.9
+    alpha   = args.alpha if args.alpha else 0.1
     beta    = 0.1
-    eps     = 0.01
-    explore = 0.1
+    delta   = 0.0001
+    eps     = 0.001
 
     begin = clock()
-    R,iters,rewards = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, explore=explore, debug=False)
+    R,iters,rewards = Rlearning(mdp, n=n, beta=beta, alpha=alpha, delta=delta, explore=eps, debug=False)
     finish = clock()
 
-    means1000(rewards)
+    title(r'$n$=%d $\beta$=%.4f $\alpha$=%.4f $\epsilon$=%.4f' 
+          % (n, beta, alpha, eps))
+    means1000(rewards, args.save)
     
     print
     print 'time = %.3fs' % (finish - begin)
@@ -103,4 +108,4 @@ def main():
 if __name__=='__main__':
     main()
 
-    sleep(60)
+    show() if args.save else sleep(60)

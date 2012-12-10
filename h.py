@@ -16,26 +16,27 @@ def short(s):
 def long(s):
     return 'long' if s==s0 else 'next'
 
-def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, debug=True):
+def Hlearning(mdp, n=inf, delta=0.8, beta=0.9, alpha=0.01, diff=0.0001, explore=0.01, debug=True):
     print
     print
-    print 'Q LEARNING...'
+    print 'H LEARNING...'
 
     # init
     Q = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
+    H = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
 
-    def V(s_): return max( Q[s_][a_] for a_ in mdp.A(s_) )
+    def V(s_): return max( H[s_][a_] for a_ in mdp.A(s_) )
     
     exploit = 1-explore
 
-    i, diff, rs = 0, inf, zeros(n)
+    i, rs = 0, zeros(n)
     
     # loop
     while i < n: #and diff > delta:
 
         if mdp.s == s0:
             # on policy
-            P    = long  if Q[s0]['short'] < Q[s0]['long']  else short
+            P    = long  if H[s0]['short'] < H[s0]['long']  else short
             notP = short if P==long                         else long
             
             # off policy
@@ -43,22 +44,20 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, deb
             #print P.__name__
             
         s,a,r,s_ = mdp.run(P)
-        
-        # until convergence
-        #Qsa = Q[s][a]
-        Q[s][a]  =  Q[s][a] * (1-alpha)  +  alpha * (r + gamma * V(s_) )
-        #diff = Qsa - Q[s][a]
+
+        H[s][a]  =  H[s][a] * (1-alpha)  +  alpha * (r + beta * delta * V(s_) )
+        Q[s][a]  =  Q[s][a] * (1-alpha)  +  alpha * (r + delta        * V(s_) )
 
         rs[i] = r
         i+=1
         
-    return Q,i,rs
+    return H,i,rs
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Main
 
 #TODO tune params: explore?, alpha, beta
-def main(gamma):
+def main(beta, delta):
     mdp = FeynmanFetch()
     
     global s0
@@ -75,34 +74,35 @@ def main(gamma):
     
     n       = args.n if args.n else 50*1000
     alpha   = args.alpha if args.alpha else 0.5
-    delta   = 0.0001
     eps     = 0.01
-
+    
     begin = clock()
-    Q,iters,rewards = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, delta=delta, explore=eps, debug=False)
+    H,iters,rewards = Hlearning(mdp, n=n, beta=beta, delta=delta, alpha=alpha, diff=diff, explore=eps, debug=False)
     finish = clock()
     
-    title(r'n=%d $\alpha$=%.4f $\epsilon$=%.4f' 
-          % (n, alpha, eps))
+    title(r'n=%d $\beta=%.4f$ $\delta=%.4f$ $\alpha$=%.4f $\epsilon$=%.4f' 
+          % (n, beta, delta, alpha, eps))
     means1000(rewards, args.save)
     
     print
     print 'time = %.3fs' % (finish - begin)
-    print 'gamma =', gamma
+    print 'beta  =', beta
+    print 'delta =', delta
     print 'mean  =', mean(rewards)
     print 'iters =', iters
-    Qlong, Qshort = Q[s0]['long'], Q[s0]['short']
-    print 'Qlong  =', Qlong
-    print 'Qshort =', Qshort
-    print Qlong > Qshort
+    Hlong, Hshort = H[s0]['long'], H[s0]['short']
+    print 'Hlong  =', Hlong
+    print 'Hshort =', Hshort
+    print Hlong > Hshort
     
     print
-    print 'Q ='
-    print Q
+    print 'H ='
+    print H
     
 
 if __name__=='__main__':
-    for gamma in [0.7, 0.9, 0.99]:
-        main(gamma)
+    for beta,delta in [(0.80, 0.90), (0.90, 0.95)]:
+        main(beta, delta)
 
     show() if args.save else sleep(60)
+    
