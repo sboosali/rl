@@ -24,6 +24,7 @@ def means1000(rewards, save=False):
     axis([0, rewards.size]+[0, 2.5])
     plot(means1000)
     draw()
+    if not save: show()
     
 
 class MDP:
@@ -93,11 +94,11 @@ class FeynmanFetch(MDP):
 
 
 
-class TimeInconsistent(mdp):
+class TimeInconsistent(MDP):
     pass
 
 
 
-class AllaisParadox(mdp):
+class AllaisParadox(MDP):
     pass
 

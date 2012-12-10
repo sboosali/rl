@@ -3,13 +3,14 @@
 import q
 import r
 import time
+from matplotlib.pyplot import *
 
-#r.main()
-#for gamma in [0.70, 0.90, 0.99]: q.main(gamma)
+import argparse
+cl = argparse.ArgumentParser()
+cl.add_argument('-save', action='store_true', dest='save', default=False)
+args = cl.parse_args()
 
+for gamma in [0.70, 0.90, 0.99]: q.main(gamma)
 r.main()
-for gamma in [0.70, 0.75, 0.80, 0.85, 0.90]:
-    print gamma
-    q.main(gamma)
 
-time.sleep(60)
+show() if args.save else time.sleep(60)
