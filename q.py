@@ -16,7 +16,7 @@ def short(s):
 def long(s):
     return 'long' if s==s0 else 'next'
 
-def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, debug=True):
+def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, decay=0.9999, debug=True):
     print
     print
     print 'Q LEARNING...'
@@ -51,6 +51,9 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, deb
 
         rs[i] = r
         i+=1
+
+        # 0.999^1000 ~= 1/3
+        alpha *= decay
         
     return Q,i,rs
 
@@ -74,16 +77,17 @@ def main(gamma):
     args = cl.parse_args()
     
     n       = args.n if args.n else 50*1000
-    alpha   = args.alpha if args.alpha else 0.5
+    alpha   = args.alpha if args.alpha else 1
     delta   = 0.0001
     eps     = 0.01
+    decay   = 0.9999
 
     begin = clock()
     Q,iters,rewards = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, delta=delta, explore=eps, debug=False)
     finish = clock()
     
-    title(r'n=%d $\alpha$=%.4f $\epsilon$=%.4f' 
-          % (n, alpha, eps))
+    title(r'$n$=%d $\alpha_0$=%.4f $\alpha_{t+1}=%.4f\alpha_t$ $\epsilon$=%.4f' 
+          % (n, alpha, decay, eps))
     means1000(rewards, args.save)
     
     print

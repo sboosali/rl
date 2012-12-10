@@ -17,7 +17,7 @@ def long(s):
     return 'long' if s==s0 else 'next'
 
 
-def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, explore=0.01, debug=True):
+def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, explore=0.01, decay=0.9999, debug=True):
     print
     print
     print 'R LEARNING...'
@@ -54,6 +54,10 @@ def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, explore=0.01, deb
             # on policy, V s = R s P(s) = R s a
             rho = rho *    (1-alpha)  +  alpha * (r + V(s_) - V(s))
                         
+
+        beta  *= decay
+        alpha *= decay
+
         rs[i] = r
         i+=1
 
@@ -79,13 +83,14 @@ def main():
     args = cl.parse_args()
 
     n       = args.n if args.n else 50*1000
-    alpha   = args.alpha if args.alpha else 0.1
-    beta    = 0.1
+    alpha   = args.alpha if args.alpha else 1
+    beta    = args.alpha if args.alpha else 1
     delta   = 0.0001
-    eps     = 0.001
+    eps     = 0.01
+    decay   = 0.9999
 
     begin = clock()
-    R,iters,rewards = Rlearning(mdp, n=n, beta=beta, alpha=alpha, delta=delta, explore=eps, debug=False)
+    R,iters,rewards = Rlearning(mdp, n=n, beta=beta, alpha=alpha, delta=delta, explore=eps, decay=decay, debug=False)
     finish = clock()
 
     title(r'$n$=%d $\beta$=%.4f $\alpha$=%.4f $\epsilon$=%.4f' 
