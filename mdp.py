@@ -14,7 +14,7 @@ def argmax(xs, f):
 def pick(xs, ps):
     return xs[ np.argmax(multinomial(1, ps)) ]
 
-def means1000(rewards, save=False):
+def means1000(rewards, save=False, color=None):
     means1000 = zeros(rewards.size - 1000)
     for i in xrange(means1000.size):
         means1000[i] = mean(rewards[i-1000 : i])
@@ -22,9 +22,14 @@ def means1000(rewards, save=False):
     ioff() if save else ion()
 
     axis([0, rewards.size]+[0, 2.5])
-    plot(means1000)
+
+    
+    curve = plot(means1000, color=color) if color else plot(means1000)
+
     draw()
     if not save: show()
+
+    return curve
     
 
 class MDP:

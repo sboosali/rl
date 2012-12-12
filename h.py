@@ -16,11 +16,11 @@ def short(s):
 def long(s):
     return 'long' if s==s0 else 'next'
 
-def Hlearning(mdp, n=inf, delta=0.8, beta=0.9, alpha=0.01, diff=0.0001, explore=0.01, debug=True):
+def Hlearning(mdp, n=inf, beta=0.8, delta=0.9, alpha=0.01, diff=0.0001, explore=0.01, debug=True):
     print
     print
     print 'H LEARNING...'
-
+    
     # init
     Q = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
     H = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
@@ -50,8 +50,9 @@ def Hlearning(mdp, n=inf, delta=0.8, beta=0.9, alpha=0.01, diff=0.0001, explore=
 
         rs[i] = r
         i+=1
-        
-    return H,i,rs
+
+    # H is a monotonic function of Q, thus trivial
+    return H,Q,i,rs
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Main
@@ -76,7 +77,7 @@ def main(beta, delta, mdp):
     eps     = 0.01
     
     begin = clock()
-    H,iters,rewards = Hlearning(mdp, n=n, beta=beta, delta=delta, alpha=alpha, diff=diff, explore=eps, debug=False)
+    H, Q, iters, rewards = Hlearning(mdp, n=n, beta=beta, delta=delta, alpha=alpha, diff=diff, explore=eps, debug=False)
     finish = clock()
     
     title(r'n=%d $\beta=%.4f$ $\delta=%.4f$ $\alpha$=%.4f $\epsilon$=%.4f' 
@@ -97,12 +98,25 @@ def main(beta, delta, mdp):
     print
     print 'H ='
     print H
+
+    print
+    print 'H s a  =  R s a * (1-beta)  +  beta * Q s a'
+
+    print
+    print 'H[l10][next] =', H['l10']['next']
+    print 'Q[l10][next] =', Q['l10']['next'] * beta + mdp.R('l10','next') * (1-beta)
+
+    print
+    print 'H[s5][next] =', H['s5']['next']
+    print 'Q[s5][next] =', Q['s5']['next'] * beta + mdp.R('s5','next') * (1-beta)
+
+    return H,Q
     
 
 if __name__=='__main__':
     for beta,delta in [(0.80, 0.90), (0.90, 0.95)]:
-        #mdp = FeynmanFetch()
-        mdp = AllaisParadox()
+        mdp = FeynmanFetch()
+        #mdp = AllaisParadox()
         main(beta, delta, mdp)
 
     show() if args.save else sleep(60)

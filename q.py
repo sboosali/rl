@@ -16,18 +16,17 @@ def short(s):
 def long(s):
     return 'long' if s==s0 else 'next'
 
-def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, decay=0.9999, debug=True):
+def Qlearning(mdp, n=inf, gamma=0.9, alpha=1, delta=0.0001, eps=0.1, decay=0.9999, debug=True):
     print
     print
     print 'Q LEARNING...'
 
     # init
     Q = { s : { a : 0  for a in mdp.A(s) }  for s in mdp.S }
+    Q['h1']['short'] = 100
 
     def V(s_): return max( Q[s_][a_] for a_ in mdp.A(s_) )
     
-    exploit = 1-explore
-
     i, diff, rs = 0, inf, zeros(n)
     
     # loop
@@ -39,7 +38,7 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, dec
             notP = short if P==long                         else long
             
             # off policy
-            P = pick( [P, notP], [exploit, explore] ) # epsilon greedy exploration
+            P = pick( [P, notP], [1-eps, eps] ) # epsilon greedy exploration
             #print P.__name__
             
         s,a,r,s_ = mdp.run(P)
@@ -53,7 +52,8 @@ def Qlearning(mdp, n=inf, gamma=0.9, alpha=0.01, delta=0.0001, explore=0.01, dec
         i+=1
 
         # 0.999^1000 ~= 1/3
-        alpha *= decay
+        alpha *= 1
+        eps   *= decay
         
     return Q,i,rs
 
@@ -76,19 +76,19 @@ def main(gamma):
     global args
     args = cl.parse_args()
     
-    n       = args.n if args.n else 50*1000
-    alpha   = args.alpha if args.alpha else 1
-    delta   = 0.0001
-    eps     = 0.01
+    n       = args.n if args.n else 50000
+    alpha   = args.alpha if args.alpha else 0.9
     decay   = 0.9999
-
+    eps     = 0.01
+    
     begin = clock()
-    Q,iters,rewards = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, delta=delta, explore=eps, debug=False)
+    Q,iters,rewards = Qlearning(mdp, n=n, gamma=gamma, alpha=alpha, eps=eps, debug=False)
     finish = clock()
     
-    title(r'$n$=%d $\alpha_0$=%.4f $\alpha_{t+1}=%.4f\alpha_t$ $\epsilon$=%.4f' 
-          % (n, alpha, decay, eps))
-    means1000(rewards, args.save)
+    title(r'$n$=%d $\alpha_0$=%.4f $\epsilon$=%.4f $decay=%.4f$'
+          % (n, alpha, eps, decay))
+    color = {0.7:(1,0,0, 1), 0.90:(0,1,0, 1), 0.99:(0,0,1, 1)}[gamma]
+    curve = means1000(rewards, color=color, save=args.save)
     
     print
     print 'time = %.3fs' % (finish - begin)
@@ -103,6 +103,8 @@ def main(gamma):
     print
     print 'Q ='
     print Q
+
+    return Q, curve
     
 
 if __name__=='__main__':

@@ -17,7 +17,7 @@ def long(s):
     return 'long' if s==s0 else 'next'
 
 
-def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, explore=0.01, decay=0.9999, debug=True):
+def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, eps=0.01, decay=0.9999, debug=True):
     print
     print
     print 'R LEARNING...'
@@ -29,15 +29,13 @@ def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, explore=0.01, dec
     rho = 0
     #rho = { s : 0  for s in mdp.S }
     
-    exploit = 1-explore
-    
     i, diff, rs = 0, inf, zeros(n)
     
     # loop
     while i < n: #and diff > delta:
 
         # epsilon greedy exploration "on policy"
-        on = pick( [True, False], [exploit, explore] )
+        on = pick( [True, False], [1-eps, eps] )
 
         if mdp.s == 'h1':
             if on:
@@ -57,6 +55,7 @@ def Rlearning(mdp, n=inf, beta=0.01, alpha=0.01, delta=0.0001, explore=0.01, dec
 
         beta  *= decay
         alpha *= decay
+        eps   *= decay
 
         rs[i] = r
         i+=1
@@ -82,20 +81,19 @@ def main():
     global args
     args = cl.parse_args()
 
-    n       = args.n if args.n else 50*1000
+    n       = args.n if args.n else 50000
     alpha   = args.alpha if args.alpha else 1
     beta    = args.alpha if args.alpha else 1
-    delta   = 0.0001
     eps     = 0.01
     decay   = 0.9999
 
     begin = clock()
-    R,iters,rewards = Rlearning(mdp, n=n, beta=beta, alpha=alpha, delta=delta, explore=eps, decay=decay, debug=False)
+    R,iters,rewards = Rlearning(mdp, n=n, beta=beta, alpha=alpha, eps=eps, decay=decay, debug=False)
     finish = clock()
 
-    title(r'$n$=%d $\beta$=%.4f $\alpha$=%.4f $\epsilon$=%.4f' 
-          % (n, beta, alpha, eps))
-    means1000(rewards, args.save)
+    title(r'$n$=%d $\beta$=%.4f $\alpha$=%.4f $\epsilon$=%.4f $decay=%.4f$' 
+          % (n, beta, alpha, eps, decay))
+    curve = means1000(rewards, color='k', save=args.save)
     
     print
     print 'time = %.3fs' % (finish - begin)
@@ -109,6 +107,8 @@ def main():
     print
     print 'R ='
     print R
+
+    return R, curve
 
 if __name__=='__main__':
     main()
