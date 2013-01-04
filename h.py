@@ -57,6 +57,76 @@ def Hlearning(mdp, n=inf, beta=0.8, delta=0.9, alpha=0.01, diff=0.0001, explore=
 # # # # # # # # # # # # # # # # # # # # # # 
 # Main
 
+class Commit(MDP):
+    s0     = 'c1'
+    commit = [s0] + ['c2', 'c3', 'c4', 'c5', 'c6']
+    direct = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6']
+    goal   = ['$1', '$5']
+
+    S  = commit + direct + goal
+
+    back = 'back'
+    u,d,l,r = 'up', 'down', 'left', 'right'
+    actions = [u,d,l,r, back]
+    
+    def A(self, s):
+        u,d,l,r = self.u, self.d, self.l, self.r
+
+        if s in self.commit:
+            return {
+                'c1':[d,r],
+                'c6':[u,r]
+                }.get(s, [u,d])
+
+        if s in self.direct:
+            return {
+                'd1':[d,l],
+                'd6':[u,l],
+                'd4':[u,d,r],
+                'd5':[u,d,r]
+                }.get(s, [u,d])
+
+        if s in self.goal:
+            return 'back'
+
+    def R(self, s,a):
+        return {'$1':1, '$5':5}.get(s, 0)
+
+
+    def inc(self, s):
+        x, i = s[0], int(s[1:])
+        return x+str(i+1)
+
+    def dec(self, s):
+        x, i = s[0], int(s[1:])
+        return x+str(i-1)
+
+    def T(self, s,a):
+        return [self.T_(s,a)],[1]
+
+    def T_(self, s,a):
+        u,d,l,r = self.u, self.d, self.l, self.r
+
+        if s in self.commit[1:-1] + self.direct[1:-1]:
+            if a==u:
+                return self.dec(s)
+            if a==d:
+                return self.inc(s)
+
+        return {
+            ('c1',r) : 'd1',
+            ('c6',r) : 'd6',
+            
+            ('d1',l) : 'c1',
+            ('d6',l) : 'c6',
+            ('d4',r) : '$1',
+            ('d5',r) : '$5',
+
+            ('$1','back') : self.s0,
+            ('$5','back') : self.s0,
+            }[s]
+
+
 #TODO tune params: explore?, alpha, beta
 def main(beta, delta, mdp):
     
@@ -115,8 +185,9 @@ def main(beta, delta, mdp):
 
 if __name__=='__main__':
     for beta,delta in [(0.80, 0.90), (0.90, 0.95)]:
-        mdp = FeynmanFetch()
+        #mdp = FeynmanFetch()
         #mdp = AllaisParadox()
+        mdp = Commit()
         main(beta, delta, mdp)
 
     show() if args.save else sleep(60)
